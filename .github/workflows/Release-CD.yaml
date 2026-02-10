@@ -1,0 +1,43 @@
+name: Release CD
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  oidc:
+    runs-on: windows-latest
+    environment: OIDC
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show workspace location
+        run: |
+          Write-Host "Workspace path: $env:GITHUB_WORKSPACE"
+          Get-Location
+          Get-ChildItem
+
+      - name: Azure Login using OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+
+      - name: Download publish artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: functionapp-publish
+          path: publish
+
+      - name: Deploy Azure Function App
+        uses: azure/functions-action@v1
+        with:
+          app-name: ${{ vars.FUNCTION_APP_NAME }}
+          package: publish
