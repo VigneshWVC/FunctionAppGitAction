@@ -3,12 +3,12 @@ name: CI - Build & Publish .NET 8 Azure Function App
 on:
   push:
     branches:
-      - main
-      - develop
+      - main1
+      - develop1
   pull_request:
     branches:
-      - main
-      - develop
+      - main1
+      - develop1
 
 jobs:
   build:
