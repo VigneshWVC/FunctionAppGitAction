@@ -22,7 +22,12 @@ jobs:
           repository: VigneshWVC/BicepTempate
           ref: main
           path: bicep-template
-          token: ${{ secrets.PATTOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify files
+        run: |
+          echo "Listing all files:"
+          ls -R bicep-template
 
       - name: Show workspace location
         run: |
