@@ -22,7 +22,7 @@ jobs:
           repository: VigneshWVC/BicepTempate
           ref: main
           path: bicep-template
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PATTOKEN }}
 
       - name: Show workspace location
         run: |
