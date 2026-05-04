@@ -1,4 +1,4 @@
-name: Auto Sync main → develop
+name: Auto Create PR main → develop
 
 on:
   pull_request:
@@ -11,33 +11,17 @@ permissions:
   pull-requests: write
 
 jobs:
-  sync-branches:
+  create-pr:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    environment: OIDC   # 👈 Environment-level secret scope
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify PAT_TOKEN availability
-        run: |
-          if [ -z "${{ secrets.PAT_TOKEN }}" ]; then
-            echo "❌ PAT_TOKEN is EMPTY - check Environment secrets"
-            exit 1
-          else
-            echo "✅ PAT_TOKEN is available"
-          fi
-
-      - name: Set up GitHub CLI
-        run: |
-          gh --version
-
-      - name: Authenticate GitHub CLI
-        run: echo "${{ secrets.PAT_TOKEN }}" | gh auth login --with-token
-
-      - name: Create Pull Request (main → develop)
-        id: create_pr
+      - name: Create PR (main → develop)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           EXISTING_PR=$(gh pr list \
             --base develop \
@@ -48,20 +32,10 @@ jobs:
 
           if [ -n "$EXISTING_PR" ] && [ "$EXISTING_PR" != "null" ]; then
             echo "PR already exists: $EXISTING_PR"
-            echo "pr_number=$EXISTING_PR" >> $GITHUB_OUTPUT
           else
-            echo "Creating new PR..."
-            PR_URL=$(gh pr create \
+            gh pr create \
               --base develop \
               --head main \
               --title "Auto Sync: main → develop" \
-              --body "This PR is automatically created after a merge into main.")
-
-            PR_NUMBER=$(echo $PR_URL | grep -o '[0-9]*$')
-            echo "Created PR: $PR_NUMBER"
-            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+              --body "Auto-created after merge into main"
           fi
-
-      - name: Enable auto-merge
-        run: |
-          gh pr merge ${{ steps.create_pr.outputs.pr_number }} --merge --auto
