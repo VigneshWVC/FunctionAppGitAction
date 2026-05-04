@@ -20,16 +20,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up GitHub CLI
-        run: |
-          gh --version
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.PAT_TOKEN }}" | gh auth login --with-token
 
       - name: Create Pull Request (main → develop)
-        id: create_pr
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          # Check if PR already exists
           EXISTING_PR=$(gh pr list \
             --base develop \
             --head main \
@@ -37,30 +32,12 @@ jobs:
             --json number \
             --jq '.[0].number')
 
-          if [ "$EXISTING_PR" != "null" ]; then
+          if [ -n "$EXISTING_PR" ] && [ "$EXISTING_PR" != "null" ]; then
             echo "PR already exists: $EXISTING_PR"
-            echo "pr_number=$EXISTING_PR" >> $GITHUB_OUTPUT
           else
-            echo "Creating new PR..."
-            PR_URL=$(gh pr create \
+            gh pr create \
               --base develop \
               --head main \
               --title "Auto Sync: main → develop" \
-              --body "This PR is automatically created after a merge into main.")
-
-            PR_NUMBER=$(echo $PR_URL | grep -o '[0-9]*$')
-            echo "Created PR: $PR_NUMBER"
-            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+              --body "Auto-created after merge into main"
           fi
-
-      - name: Auto approve PR
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: |
-          gh pr review ${{ steps.create_pr.outputs.pr_number }} --approve
-
-      - name: Enable auto-merge
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: |
-          gh pr merge ${{ steps.create_pr.outputs.pr_number }} --merge --auto
