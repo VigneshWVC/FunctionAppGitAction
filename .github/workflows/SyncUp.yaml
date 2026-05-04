@@ -60,6 +60,6 @@ jobs:
 
       - name: Enable auto-merge
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_PAT }}
         run: |
           gh pr merge ${{ steps.create_pr.outputs.pr_number }} --merge --auto
